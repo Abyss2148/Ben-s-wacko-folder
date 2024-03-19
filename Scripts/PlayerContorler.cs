@@ -38,18 +38,13 @@ public class PlayerContorler : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetButtonDown("Cancel"))
-        {
-            controlable = true;
-            transform.position = new Vector3(0, -4, 0);
-            rb.gravityScale = 1;
-        }
+        
 
         float x = Input.GetAxis("Horizontal");
         float y = Input.GetAxis("Vertical");
         Vector2 dir = new Vector2(x, y);
 
-        if (controlable){walk(dir);}
+        {walk(dir);
         
 
         if (Input.GetButtonDown("Jump") && isGrounded && controlable)
