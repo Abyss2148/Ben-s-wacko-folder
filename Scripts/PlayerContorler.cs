@@ -6,18 +6,31 @@ using UnityEngine;
 public class PlayerContorler : MonoBehaviour
 {
 
-    private Collision coll;
+    public LayerMask groundLayer;
+
+
     public Rigidbody2D  rb;
+
+    public Vector2 bottomOffset, rightOffset, leftOffset;
 
 
     public float speed = 7;
     public float jumpForce = 7;
     public float fallMultiplier = 2.5f;
     public float lowJumpMultiplier = 2f;
+    public float collisionRadius = 0.25f;
+    public float slideSpeed = 5;
 
-    public int score;
+
     private bool isGrounded;
-    private bool controlable;
+    private bool onWall;
+    private bool onRightWall;
+    private bool onLeftWall;
+    private bool wallSlide;
+    private bool isDJumped;
+
+    private int wallSide;
+    
 
  
 
@@ -25,32 +38,60 @@ public class PlayerContorler : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        coll = GetComponent<Collision>();
+       
         rb = GetComponent<Rigidbody2D>();
 
-        score = 0;
+        
     
 
-        isGrounded = true;
-        controlable = true;
+        
     }
 
     // Update is called once per frame
     void Update()
     {
-        
+        isGrounded = Physics2D.OverlapCircle((Vector2)transform.position + bottomOffset, collisionRadius, groundLayer);
+        onWall = Physics2D.OverlapCircle((Vector2)transform.position + rightOffset, collisionRadius, groundLayer) 
+            || Physics2D.OverlapCircle((Vector2)transform.position + leftOffset, collisionRadius, groundLayer);
+
+        onRightWall = Physics2D.OverlapCircle((Vector2)transform.position + rightOffset, collisionRadius, groundLayer);
+        onLeftWall = Physics2D.OverlapCircle((Vector2)transform.position + leftOffset, collisionRadius, groundLayer);
+
+        wallSide = onRightWall ? -1 : 1;
 
         float x = Input.GetAxis("Horizontal");
         float y = Input.GetAxis("Vertical");
         Vector2 dir = new Vector2(x, y);
 
-        {walk(dir);
+        walk(dir);
+
+        if (!onWall || isGrounded)
+        {
+            wallSlide = false;
+            
+        }
+
+        if (isGrounded)
+        {
+            isDJumped = false;
+        }
+
+        if(onWall && !isGrounded)
+        {
+            wallSlide = true;
+            WallSlide();
+        }
         
 
-        if (Input.GetButtonDown("Jump") && isGrounded && controlable)
+        if (Input.GetButtonDown("Jump") && isGrounded)
         {
             jump(Vector2.up);
             isGrounded = false;
+        }
+        if (Input.GetButtonDown("Jump") && !isGrounded && !isDJumped)
+        {
+             jump(Vector2.up);
+             isDJumped = true;
         }
 
         if(rb.velocity.y < 0)
@@ -63,6 +104,7 @@ public class PlayerContorler : MonoBehaviour
         }
         
         
+    
     }
 
     private void walk(Vector2 dir)
@@ -76,27 +118,30 @@ public class PlayerContorler : MonoBehaviour
     rb.velocity = (dir * jumpForce);
     }
 
-    void OnCollisionEnter2D(Collision2D col)
+    void OnDrawGizmos()
     {
-        if (col.gameObject.tag == "Ground")
-        {
-            isGrounded = true;
-        }
-        // if (col.gameObject.tag == "Wall"){
-        //     rb.velocity = new Vector2(rb.velocity.x * -1, rb.velocity.y);
+        Gizmos.color = Color.red;
+
+        var positions = new Vector2[] { bottomOffset, rightOffset, leftOffset };
+
+        Gizmos.DrawWireSphere((Vector2)transform.position  + bottomOffset, collisionRadius);
+        Gizmos.DrawWireSphere((Vector2)transform.position + rightOffset, collisionRadius);
+        Gizmos.DrawWireSphere((Vector2)transform.position + leftOffset, collisionRadius);
+    }
+
+     private void WallSlide()
+    {
+
+        // bool pushingWall = false;
+        // if((rb.velocity.x > 0 && onRightWall) || (rb.velocity.x < 0 && onLeftWall))
+        // {
+        //     pushingWall = true;
         // }
-        
-        
+        // float push = pushingWall ? 0 : rb.velocity.x;
+
+        rb.velocity = new Vector2(rb.velocity.x, -slideSpeed);
     }
 
-    void OnTriggerEnter2D(Collider2D col)
-    {
-        rb.gravityScale = 0;
-        rb.velocity = new Vector2(0,0);
-        
-        controlable = false;
-        
-    }
-
+    
 
 }
