@@ -7,6 +7,7 @@ public class PlayerContorler : MonoBehaviour
 {
 
     public LayerMask groundLayer;
+    public LayerMask creatureLayer;
 
 
     public Rigidbody2D  rb;
@@ -28,6 +29,7 @@ public class PlayerContorler : MonoBehaviour
     private bool onLeftWall;
     private bool wallSlide;
     private bool isDJumped;
+    private bool enemyContact;
 
     private int wallSide;
     
@@ -40,6 +42,7 @@ public class PlayerContorler : MonoBehaviour
     {
        
         rb = GetComponent<Rigidbody2D>();
+        
 
         
     
@@ -57,6 +60,9 @@ public class PlayerContorler : MonoBehaviour
         onRightWall = Physics2D.OverlapCircle((Vector2)transform.position + rightOffset, collisionRadius, groundLayer);
         onLeftWall = Physics2D.OverlapCircle((Vector2)transform.position + leftOffset, collisionRadius, groundLayer);
 
+        enemyContact = Physics2D.OverlapCircle((Vector2)transform.position + rightOffset, collisionRadius, creatureLayer) 
+            || Physics2D.OverlapCircle((Vector2)transform.position + leftOffset, collisionRadius, creatureLayer);
+
         wallSide = onRightWall ? -1 : 1;
 
         float x = Input.GetAxis("Horizontal");
@@ -69,6 +75,11 @@ public class PlayerContorler : MonoBehaviour
         {
             wallSlide = false;
             
+        }
+
+        if (enemyContact){
+            //player damage/death logic
+            DestroyObject(gameObject);
         }
 
         if (isGrounded)
